@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JSFiddle 4zjxsvqa</title>
+
+  <style>
+    
+  </style>
+
+  
+</head>
+<body>
+  <!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>托福听力单词测试（初级）</title>
+  <style>
+    /* 公共样式 */
+    body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 20px; background: #877071; }
+    .container { position: relative; margin: auto; max-width: 900px; padding: 20px; border-radius: 10px; background: #F5EBEB; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { color: #3E2723; }
+    #mode-buttons button { margin: 0 10px; padding: 10px 20px; font-size: 16px; border: none; border-radius: 5px; background: #877071; color: #fff; cursor: pointer; }
+    #mode-buttons button:hover { background: #D5B4B5; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+    .card { padding: 15px; border: 2px solid #877071; border-radius: 5px; background: #E4D0D0; cursor: default; transition: background 0.3s; line-height: 1.5; color: #3E2723;}
+     h2 { color: #3E2723; }
+     p { color: #3E2723; }
+    /* 消消乐样式 */
+    .card.match { visibility: hidden; }
+    .card.selected { background: #F5EBEB; }
+    /* 听听乐样式 */
+#audio-mode #options-area {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 200px));
+  gap: 10px;
+  margin: 20px auto 0;
+  justify-content: center;  /* 水平整体居中 */
+  justify-items: center;    /* 每个按钮在单元格中居中 */
+}
+    #options-area button { display: block; margin: 10px auto; padding: 10px 20px; font-size: 16px; border: none; border-radius: 5px; background: #D5B4B5; color: #3E2723; cursor: pointer; }
+    #options-area button.correct { background: #4caf50; }
+    #options-area button.wrong { background: #f44336; }
+    #options-area button:disabled { cursor: default; opacity: 0.8; }
+    /* 控制按钮统一样式 */
+    #audio-controls button { margin: 0 10px; padding: 10px 20px; font-size: 14px; border: none; border-radius: 5px; background: #877071; color: #fff; cursor: pointer; }
+    #back-btn-area button { margin: 20px 10px; padding: 10px 20px; font-size: 14px; border: none; border-radius: 5px; background: #877071; color: #fff; cursor: pointer; }
+    #result-btn-area button {
+      margin: 5px; padding: 8px 16px; font-size: 14px; border: none; border-radius: 5px; background: #ab47bc; color: #fff; cursor: pointer;
+    }
+    #audio-controls button:hover { background: #D5B4B5; }
+    #back-btn-area button:hover { background: #D5B4B5; }
+    #result-btn-area button:hover { background: #9c27b0; }
+    #audio-status { font-size: 14px; margin-bottom: 10px; }
+    /* 错误总结列表 */
+    ul.error-list { list-style: none; padding-left: 0; text-align: left; }
+    ul.error-list li { margin: 5px 0; }
+    /* 错误页按钮居中 */
+    #result-btn-area { text-align: center; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="main-title">Word Zone</h1>
+    <div id="mode-buttons">
+      <button onclick="refreshLearningMode()">Refresh</button>
+      <button onclick="startMatchGame()">Match-Up</button>
+      <button onclick="startAudioGame()">Listen & Select</button>
+    </div>
+    <!-- 学习模式 -->
+    <div id="learning-mode"></div>
+    <!-- 消消乐模式 -->
+    <div id="match-mode" style="display:none;">
+      <div id="match-header">
+        <h2>Match-Up</h2>
+        <p>Match the English words with their Chinese meanings</p>
+      </div>
+      <div id="game-grid"></div>
+      <div id="back-btn-area"><button onclick="refreshLearningMode()">Back to Word Zone</button></div>
+    </div>
+    <!-- 听听乐模式 -->
+    <div id="audio-mode" style="display:none;">
+      <div id="audio-header">
+        <h2>Listen & Select</h2>
+        <p>Select the right Chinese meaning by the word's pronunciation</p>
+      </div>
+      <div id="options-area"></div>
+      <div id="audio-controls">
+        <div id="audio-status"></div>
+        <button onclick="replayAudio()">Listen Again</button>
+        <button onclick="refreshLearningMode()">Back to Word Zone</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 词库示例
+    const WORD_LIST = [
+      { en: 'atmosphere', zh: '空气；气氛' }, { en: 'geography', zh: '地理；地理学' }, { en: 'climatology', zh: '气候学' }, { en: 'syllabus', zh: '教学大纲，课程大纲' }, { en: 'masterpiece', zh: '杰作；极好的例子' }, { en: 'aerosol', zh: '喷雾剂；气溶胶' }, { en: 'participation', zh: '参加' }, { en: 'tapestry', zh: '（手织的）花毯；绒绣' }, { en: 'portion', zh: '一部分；一份' }, { en: 'requirement', zh: '需要；规定' }, { en: 'aerial', zh: '（无线电或电视的）天线；空中的' }, { en: 'bombardment', zh: '连续轰炸；连续提问' }, { en: 'wrench', zh: '猛扯；拆散' }, { en: 'display', zh: '排列；显示；陈列品；表演' }, { en: 'mixture', zh: '混合物；合剂' }, { en: 'approval', zh: '赞同；批准' } // Unit 1
+    ];
+
+    // 全局状态
+    let currentWords = [];
+    let qIndex = 0;
+    let errors = [];
+    let matchCards = [];
+    let sel = [];
+    let currentAudioWord = '';
+
+    // 洗牌
+    function shuffle(arr) { return arr.sort(() => 0.5 - Math.random()); }
+
+    // 初始化学习模式：取不重复的16个单词
+    function refreshLearningMode() {
+      document.getElementById('main-title').style.display = 'block';
+      currentWords = shuffle(WORD_LIST.slice()).slice(0, 16);
+      document.getElementById('learning-mode').innerHTML =
+        '<div class="grid">' +
+        currentWords.map(w => `<div class="card">${w.en}<br>${w.zh}</div>`).join('') +
+        '</div>';
+      document.getElementById('learning-mode').style.display = 'block';
+      document.getElementById('match-mode').style.display = 'none';
+      document.getElementById('audio-mode').style.display = 'none';
+      document.getElementById('mode-buttons').style.display = 'block';
+    }
+
+    /* —— 消消乐模式 —— */
+    function startMatchGame() {
+      if (currentWords.length < 16) return;
+      document.getElementById('main-title').style.display = 'none';
+      document.getElementById('match-header').style.display = 'block';
+      document.getElementById('back-btn-area').style.display = 'block';
+      sel = [];
+      errors = [];
+      matchCards = [];
+      currentWords.forEach(w => {
+        matchCards.push({ t: w.en, key: w.en });
+        matchCards.push({ t: w.zh, key: w.en });
+      });
+      matchCards = shuffle(matchCards);
+      renderMatch();
+      document.getElementById('learning-mode').style.display = 'none';
+      document.getElementById('mode-buttons').style.display = 'none';
+      document.getElementById('match-mode').style.display = 'block';
+    }
+
+    function renderMatch() {
+      document.getElementById('game-grid').innerHTML =
+        '<div class="grid">' +
+        matchCards.map((c, i) =>
+          `<div class="card${c.m ? ' match' : ''}" id="m${i}" onclick="pick(${i})">${c.t}</div>`
+        ).join('') +
+        '</div>';
+    }
+
+    function pick(i) {
+      if (matchCards[i].m) return;
+      sel.push(i);
+      document.getElementById(`m${i}`).classList.add('selected');
+      if (sel.length === 2) setTimeout(checkMatch, 300);
+    }
+
+    function checkMatch() {
+      const [a, b] = sel;
+      if (
+        matchCards[a].key === matchCards[b].key &&
+        matchCards[a].t !== matchCards[b].t
+      ) {
+        matchCards[a].m = matchCards[b].m = true;
+      } else {
+        errors.push(matchCards[a].key);
+      }
+      sel.forEach(i => document.getElementById(`m${i}`).classList.remove('selected'));
+      sel = [];
+      renderMatch();
+      if (matchCards.every(c => c.m)) setTimeout(showMatchResults, 500);
+    }
+
+    function showMatchResults() {
+      document.getElementById('match-header').style.display = 'none';
+      document.getElementById('back-btn-area').style.display = 'none';
+      let html = `<h2>Words for Revision</h2>`;
+      if (errors.length) {
+        html +=
+          '<ul class="error-list">' +
+          [...new Set(errors)]
+            .map(en => {
+              const w = currentWords.find(w => w.en === en);
+              return `<li>${w.en} - ${w.zh}</li>`;
+            })
+            .join('') +
+          '</ul>';
+      } else {
+        html += '<p>Congratulations！</p>';
+      }
+      html +=
+        '<div id="result-btn-area">' +
+        '<button onclick="refreshLearningMode()">Back to Word Zone</button>' +
+        '</div>';
+      document.getElementById('game-grid').innerHTML = html;
+    }
+
+    /* —— 听听乐模式 —— */
+    function startAudioGame() {
+      if (currentWords.length < 16) return;
+      document.getElementById('main-title').style.display = 'none';
+      document.getElementById('audio-header').style.display = 'block';
+      document.getElementById('audio-controls').style.display = 'block';
+      qIndex = 0;
+      errors = [];
+      shuffle(currentWords);
+      showQuestion();
+      document.getElementById('learning-mode').style.display = 'none';
+      document.getElementById('mode-buttons').style.display = 'none';
+      document.getElementById('match-mode').style.display = 'none';
+      document.getElementById('audio-mode').style.display = 'block';
+    }
+
+    function showQuestion() {
+      if (qIndex >= currentWords.length) {
+        showAudioResults();
+        return;
+      }
+      const word = currentWords[qIndex];
+      currentAudioWord = word.en;
+      speechSynthesis.speak(new SpeechSynthesisUtterance(currentAudioWord));
+      let opts = [word];
+      while (opts.length < 4) {
+        const r = WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)];
+        if (!opts.find(o => o.zh === r.zh)) opts.push(r);
+      }
+      opts = shuffle(opts);
+      document.getElementById('options-area').innerHTML =
+        opts
+          .map(o => `<button onclick="choose(this,'${o.zh}','${word.zh}')">${o.zh}</button>`)
+          .join('');
+      document.getElementById('audio-status').innerText =
+        `Question ${qIndex + 1} of ${currentWords.length} `;
+    }
+
+    function replayAudio() {
+      if (currentAudioWord) {
+        speechSynthesis.speak(new SpeechSynthesisUtterance(currentAudioWord));
+      }
+    }
+
+    function choose(btn, chosen, correct) {
+      Array.from(document.querySelectorAll('#options-area button')).forEach(b => (b.disabled = true));
+      if (chosen === correct) {
+        btn.classList.add('correct');
+      } else {
+        btn.classList.add('wrong');
+        errors.push(currentWords[qIndex].en);
+        Array.from(document.querySelectorAll('#options-area button')).
+          find(b => b.innerText === correct).
+          classList.add('correct');
+      }
+      setTimeout(() => {
+        qIndex++;
+        showQuestion();
+      }, 800);
+    }
+
+    function showAudioResults() {
+      document.getElementById('audio-header').style.display = 'none';
+      document.getElementById('audio-controls').style.display = 'none';
+      let html = `<h2>Words for Revision</h2>`;
+      if (errors.length) {
+        html +=
+          '<ul class="error-list">' +
+          [...new Set(errors)]
+            .map(en => {
+              const w = WORD_LIST.find(w => w.en === en);
+              return `<li>${w.en} - ${w.zh}</li>`;
+            })
+            .join('') +
+          '</ul>';
+      } else {
+        html += '<p>Congratulations！👏</p>';
+      }
+      html += '<div id="audio-controls"><button onclick="refreshLearningMode()">Back to Word Zone</button></div>';
+      document.getElementById('audio-mode').innerHTML = html;
+    }
+
+    window.onload = refreshLearningMode;
+  </script>
+</body>
+</html>
+
+
+  <script>
+    
+  </script>
+</body>
+</html>
