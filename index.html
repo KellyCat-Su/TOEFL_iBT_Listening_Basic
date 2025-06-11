@@ -223,27 +223,36 @@
     }
 
     function showQuestion() {
-      if (qIndex >= currentWords.length) {
-        showAudioResults();
-        return;
-      }
-      const word = currentWords[qIndex];
-      currentAudioWord = word.en;
-      speechSynthesis.speak(new SpeechSynthesisUtterance(currentAudioWord));
-      let opts = [word];
-      while (opts.length < 4) {
-        const r = WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)];
-        if (!opts.find(o => o.zh === r.zh)) opts.push(r);
-      }
-      opts = shuffle(opts);
-      document.getElementById('options-area').innerHTML =
-        opts
-          .map(o => `<button onclick="choose(this,'${o.zh}','${word.zh}')">${o.zh}</button>`)
-          .join('');
-      document.getElementById('audio-status').innerText =
-        `Question ${qIndex + 1} of ${currentWords.length} `;
-    }
+  if (qIndex >= currentWords.length) {
+    showAudioResults()
+    return
+  }
 
+  // 清空旧按钮
+  const optionsArea = document.getElementById("options-area")
+  optionsArea.innerHTML = ""
+
+  const word = currentWords[qIndex]
+  currentAudioWord = word.en
+  speechSynthesis.speak(new SpeechSynthesisUtterance(currentAudioWord))
+
+  let opts = [word]
+  while (opts.length < 4) {
+    const r = WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)]
+    if (!opts.find((o) => o.zh === r.zh)) opts.push(r)
+  }
+  opts = shuffle(opts)
+
+  opts.forEach((o) => {
+    const btn = document.createElement("button")
+    btn.textContent = o.zh
+    btn.onclick = () => choose(btn, o.zh, word.zh)
+    optionsArea.appendChild(btn)
+  })
+
+  document.getElementById("audio-status").innerText =
+    `Question ${qIndex + 1} of ${currentWords.length}`
+}
     function replayAudio() {
       if (currentAudioWord) {
         speechSynthesis.speak(new SpeechSynthesisUtterance(currentAudioWord));
