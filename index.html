@@ -124,7 +124,7 @@
         font-size: 14px;
         border: none;
         border-radius: 5px;
-        background: #ab47bc;
+        background: #877071;
         color: #fff;
         cursor: pointer;
       }
@@ -135,7 +135,7 @@
         background: #d5b4b5;
       }
       #result-btn-area button:hover {
-        background: #9c27b0;
+        background: #d5b4b5;
       }
       #audio-status {
         font-size: 14px;
@@ -145,7 +145,7 @@
       ul.error-list {
         list-style: none;
         padding-left: 0;
-        text-align: left;
+        margin-top: 20px; 
       }
       ul.error-list li {
         margin: 5px 0;
@@ -378,6 +378,7 @@
       function showAudioResults() {
         document.getElementById("audio-header").style.display = "none"
         document.getElementById("audio-controls").style.display = "none"
+        document.getElementById("options-area").innerHTML = ""
         let html = `<h2>Words for Revision</h2>`
         if (errors.length) {
           html +=
@@ -393,8 +394,10 @@
           html += "<p>Congratulations！👏</p>"
         }
         html +=
-          '<div id="audio-controls"><button onclick="refreshLearningMode()">Back to Word Zone</button></div>'
-        document.getElementById("audio-mode").innerHTML = html
+          '<div id="result-btn-area">' +
+          '<button onclick="refreshLearningMode()">Back to Word Zone</button>' +
+    "</div>"
+        document.getElementById("options-area").innerHTML = html
       }
 
       window.onload = refreshLearningMode
